@@ -1,0 +1,54 @@
+#include <stdio.h>
+#include <string.h>
+
+void ecbEncrypt(const char *plaintext, char *ciphertext) {
+    // ECB encryption implementation (for demonstration purposes)
+    // In a real implementation, use a secure encryption library
+    strcpy(ciphertext, plaintext);
+}
+
+void cbcEncrypt(const char *plaintext, const char *iv, char *ciphertext) {
+    // CBC encryption implementation (for demonstration purposes)
+    // In a real implementation, use a secure encryption library
+    int blockCount = strlen(plaintext) / 8;
+
+    for (int i = 0; i < blockCount; i++) {
+        for (int j = 0; j < 8; j++) {
+            ciphertext[i * 8 + j] = plaintext[i * 8 + j] ^ iv[j];
+        }
+        iv = &ciphertext[i * 8]; // Use previous ciphertext block as IV for next block
+    }
+}
+
+void introduceError(char *data, int position) {
+    data[position] ^= 0x01; // Flip one bit to simulate an error
+}
+
+int main() {
+    const char *plaintext = "HelloWorldThisIsATest";
+    char ciphertextEcb[strlen(plaintext) + 1];
+    char ciphertextCbc[strlen(plaintext) + 1];
+    const char *iv = "12345678";
+
+    ecbEncrypt(plaintext, ciphertextEcb);
+    cbcEncrypt(plaintext, iv, ciphertextCbc);
+
+    printf("Original Plaintext: %s\n", plaintext);
+    printf("ECB Ciphertext: %s\n", ciphertextEcb);
+    printf("CBC Ciphertext: %s\n\n", ciphertextCbc);
+
+    // Introduce an error in the first block of ciphertext
+    introduceError(ciphertextEcb, 0); // Simulating an error in ECB mode
+
+    printf("Ciphertext after introducing error (ECB):\n");
+    printf("%s\n", ciphertextEcb);
+
+    // Simulate CBC error propagation
+    introduceError(ciphertextCbc, 0); // Error in C1 (CBC)
+    cbcEncrypt(ciphertextCbc, iv, ciphertextCbc); // Recompute ciphertext blocks
+
+    printf("\nCiphertext after introducing error and re-encrypting (CBC):\n");
+    printf("%s\n", ciphertextCbc);
+
+    return 0;
+}
