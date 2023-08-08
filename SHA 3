@@ -1,0 +1,30 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <openssl/sha.h>
+
+void sha3(const unsigned char *input, size_t inputLen, unsigned char *output) {
+    SHA3_CTX ctx;
+    SHA3_Init(&ctx, SHA3_256); // You can choose different variants (e.g., SHA3_224, SHA3_384, SHA3_512)
+
+    SHA3_Update(&ctx, input, inputLen);
+    SHA3_Final(output, &ctx);
+}
+
+int main() {
+    const char *input = "Hello, SHA-3!";
+    size_t inputLen = strlen(input);
+
+    unsigned char hash[SHA3_256_DIGEST_LENGTH]; // SHA-3_256 produces a 256-bit hash
+
+    sha3((const unsigned char *)input, inputLen, hash);
+
+    printf("Input: %s\n", input);
+    printf("SHA-3 Hash: ");
+    for (int i = 0; i < SHA3_256_DIGEST_LENGTH; i++) {
+        printf("%02x", hash[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
