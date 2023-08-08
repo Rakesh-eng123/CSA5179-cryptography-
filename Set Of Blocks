@@ -1,0 +1,48 @@
+#include <stdio.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+
+int main() {
+    RSA *rsaKeyPair = RSA_generate_key(2048, RSA_F4, NULL, NULL);
+    if (!rsaKeyPair) {
+        printf("Error generating RSA key pair.\n");
+        return 1;
+    }
+
+    const char *plaintextBlocks[] = {
+        "Block 1",
+        "Block 2",
+        "Block 3",
+        "Block 4"
+    };
+
+    unsigned char encryptedBlocks[4][RSA_size(rsaKeyPair)];
+    
+    for (int i = 0; i < 4; i++) {
+        int encryptedLength = RSA_public_encrypt(strlen(plaintextBlocks[i]),
+                                                 (const unsigned char *)plaintextBlocks[i],
+                                                 encryptedBlocks[i], rsaKeyPair, RSA_PKCS1_PADDING);
+        if (encryptedLength == -1) {
+            printf("Error encrypting block %d.\n", i + 1);
+            return 1;
+        }
+    }
+
+    printf("Plaintext Blocks:\n");
+    for (int i = 0; i < 4; i++) {
+        printf("%d: %s\n", i + 1, plaintextBlocks[i]);
+    }
+
+    printf("\nEncrypted Blocks:\n");
+    for (int i = 0; i < 4; i++) {
+        printf("%d: ", i + 1);
+        for (int j = 0; j < RSA_size(rsaKeyPair); j++) {
+            printf("%02X", encryptedBlocks[i][j]);
+        }
+        printf("\n");
+    }
+
+    RSA_free(rsaKeyPair);
+
+    return 0;
+}
