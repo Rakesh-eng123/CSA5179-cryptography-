@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define MOD 26
+
+int gcd(int a, int b) {
+    if (b == 0) {
+        return a;
+    }
+    return gcd(b, a % b);
+}
+
+int modInverse(int a) {
+    for (int x = 1; x < MOD; x++) {
+        if ((a * x) % MOD == 1) {
+            return x;
+        }
+    }
+    return -1;
+}
+
+void matrixInverse(int key[2][2], int invKey[2][2]) {
+    int det = (key[0][0] * key[1][1] - key[0][1] * key[1][0]) % MOD;
+    if (det < 0) {
+        det += MOD;
+    }
+    int detInverse = modInverse(det);
+
+    invKey[0][0] = (key[1][1] * detInverse) % MOD;
+    invKey[0][1] = ((-key[0][1] + MOD) * detInverse) % MOD;
+    invKey[1][0] = ((-key[1][0] + MOD) * detInverse) % MOD;
+    invKey[1][1] = (key[0][0] * detInverse) % MOD;
+}
+
+void decryptHill(const char *ciphertext, const int key[2][2], char *plaintext) {
+    int length = strlen(ciphertext);
+    int invKey[2][2];
+    matrixInverse(key, invKey);
+
+    for (int i = 0; i < length; i += 2) {
+        int c1 = ciphertext[i] - 'A';
+        int c2 = ciphertext[i + 1] - 'A';
+
+        int p1 = (invKey[0][0] * c1 + invKey[0][1] * c2) % MOD;
+        int p2 = (invKey[1][0] * c1 + invKey[1][1] * c2) % MOD;
+
+        plaintext[i] = p1 + 'A';
+        plaintext[i + 1] = p2 + 'A';
+    }
+    plaintext[length] = '\0';
+}
+
+int main() {
+    const char *ciphertext = "LIFG";
+    int key[2][2] = {
+        {6, 3},
+        {5, 2}
+    };
+
+    char plaintext[strlen(ciphertext) + 1];
+
+    decryptHill(ciphertext, key, plaintext);
+
+    printf("Ciphertext: %s\n", ciphertext);
+    printf("Plaintext: %s\n", plaintext);
+
+    return 0;
+}
