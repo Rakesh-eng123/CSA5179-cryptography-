@@ -1,0 +1,46 @@
+#include <stdio.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+
+int main() {
+    RSA *rsaKeyPair = RSA_generate_key(2048, RSA_F4, NULL, NULL);
+    if (!rsaKeyPair) {
+        printf("Error generating RSA key pair.\n");
+        return 1;
+    }
+
+    const char *plaintext = "Hello, RSA!";
+
+    // Buffer to hold encrypted and decrypted messages
+    unsigned char encryptedMessage[4096];
+    unsigned char decryptedMessage[4096];
+
+    // Encrypt the message using the recipient's public key
+    int encryptedLength = RSA_public_encrypt(strlen(plaintext),
+                                             (const unsigned char *)plaintext,
+                                             encryptedMessage, rsaKeyPair, RSA_PKCS1_PADDING);
+    if (encryptedLength == -1) {
+        printf("Error encrypting the message.\n");
+        return 1;
+    }
+
+    // Decrypt the encrypted message using the recipient's private key
+    int decryptedLength = RSA_private_decrypt(encryptedLength, encryptedMessage,
+                                               decryptedMessage, rsaKeyPair, RSA_PKCS1_PADDING);
+    if (decryptedLength == -1) {
+        printf("Error decrypting the message.\n");
+        return 1;
+    }
+
+    // Print results
+    printf("Original Message: %s\n", plaintext);
+    printf("Encrypted Message: ");
+    for (int i = 0; i < encryptedLength; i++) {
+        printf("%02X", encryptedMessage[i]);
+    }
+    printf("\nDecrypted Message: %s\n", decryptedMessage);
+
+    RSA_free(rsaKeyPair);
+
+    return 0;
+}
