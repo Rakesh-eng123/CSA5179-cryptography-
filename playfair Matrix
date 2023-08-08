@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+void generatePlayfairMatrix(const char *key, char matrix[5][5]) {
+    int used[26] = {0};
+    int keyLen = strlen(key);
+    int row = 0, col = 0;
+    for (int i = 0; i < keyLen; i++) {
+        if (used[tolower(key[i]) - 'a'] == 0 && key[i] != 'j') {
+            matrix[row][col] = tolower(key[i]);
+            used[tolower(key[i]) - 'a'] = 1;
+            col++;
+            if (col == 5) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+    for (int i = 0; i < 26; i++) {
+        if (used[i] == 0 && i != ('j' - 'a')) {
+            matrix[row][col] = i + 'a';
+            col++;
+            if (col == 5) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+}
+
+void printPlayfairMatrix(char matrix[5][5]) {
+    printf("Playfair Matrix:\n");
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            printf("%c ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    char key[] = "KEYWORD";
+    char playfairMatrix[5][5];
+
+    generatePlayfairMatrix(key, playfairMatrix);
+    printPlayfairMatrix(playfairMatrix);
+
+    return 0;
+}
