@@ -1,0 +1,77 @@
+#include <stdio.h>
+
+typedef unsigned char byte;
+typedef unsigned short int word;
+
+byte permute(byte data, int* permutation, int length);
+byte feistel(byte r, byte key);
+void generateRoundKeys(word key, byte* roundKeys);
+
+void ctrEncrypt(byte* plaintext, byte* ciphertext, word key, word counter, int size);
+
+int main() {
+    word key = 0b0111111101; // 10-bit key
+    word counter = 0b00000000; // Initial counter value
+
+    byte plaintext[] = {0b00000001, 0b00000010, 0b00000100}; // 3 bytes plaintext
+
+    int size = sizeof(plaintext);
+
+    byte ciphertext[size];
+    byte decrypted[size];
+
+    ctrEncrypt(plaintext, ciphertext, key, counter, size);
+
+    printf("Plaintext: ");
+    for (int i = 0; i < size; i++) {
+        printf("%02X ", plaintext[i]);
+    }
+    printf("\n");
+
+    printf("Ciphertext: ");
+    for (int i = 0; i < size; i++) {
+        printf("%02X ", ciphertext[i]);
+    }
+    printf("\n");
+
+    ctrEncrypt(ciphertext, decrypted, key, counter, size);
+
+    printf("Decrypted: ");
+    for (int i = 0; i < size; i++) {
+        printf("%02X ", decrypted[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+
+byte permute(byte data, int* permutation, int length) {
+    byte result = 0;
+    for (int i = 0; i < length; i++) {
+        result <<= 1;
+        result |= ((data >> (8 - permutation[i])) & 0x01);
+    }
+    return result;
+}
+
+byte feistel(byte r, byte key) {
+    int expansionPermutation[] = {4, 1, 2, 3, 2, 3, 4, 1};
+    byte expanded = permute(r, expansionPermutation, 8);
+    byte xorResult = expanded ^ key;
+    return xorResult;
+}
+
+void generateRoundKeys(word key, byte* roundKeys) {
+   
+}
+
+void ctrEncrypt(byte* plaintext, byte* ciphertext, word key, word counter, int size) {
+    byte roundKeys[16];
+    generateRoundKeys(key, roundKeys);
+
+    for (int i = 0; i < size; i++) {
+        byte encryptedByte = plaintext[i] ^ feistel(counter & 0xFF, roundKeys[i % 16]);
+        ciphertext[i] = encryptedByte;
+        counter++;
+    }
+}
