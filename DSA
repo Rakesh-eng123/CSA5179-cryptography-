@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <openssl/dsa.h>
+#include <openssl/err.h>
+
+void generateDsaKeyPair(DSA **dsaKeyPair) {
+    DSA *dsa = DSA_new();
+    if (!DSA_generate_parameters_ex(dsa, 1024, NULL, 0, NULL, NULL, NULL) ||
+        !DSA_generate_key(dsa)) {
+        printf("Error generating DSA key pair.\n");
+        ERR_print_errors_fp(stdout);
+        exit(1);
+    }
+    *dsaKeyPair = dsa;
+}
+
+void signMessage(const char *message, DSA *dsaKeyPair) {
+    unsigned char hash[SHA_DIGEST_LENGTH];
+    SHA1((unsigned char *)message, strlen(message), hash);
+
+    DSA_SIG *signature = DSA_do_sign(hash, SHA_DIGEST_LENGTH, dsaKeyPair);
+    if (signature == NULL) {
+        printf("Error signing the message.\n");
+        ERR_print_errors_fp(stdout);
+        exit(1);
+    }
+
+    printf("Message: %s\n", message);
+    printf("Signature (r): %s\n", BN_bn2hex(signature->r));
+    printf("Signature (s): %s\n", BN_bn2hex(signature->s));
+}
+
+int verifySignature(const char *message, DSA *dsaKeyPair) {
+    unsigned char hash[SHA_DIGEST_LENGTH];
+    SHA1((unsigned char *)message, strlen(message), hash);
+
+    DSA_SIG *signature = DSA_do_sign(hash, SHA_DIGEST_LENGTH, dsaKeyPair);
+    if (signature == NULL) {
+        printf("Error signing the message.\n");
+        ERR_print_errors_fp(stdout);
+        exit(1);
+    }
+
+    int verified = DSA_do_verify(hash, SHA_DIGEST_LENGTH, signature, dsaKeyPair);
+
+    return verified;
+}
+
+int main() {
+    const char *message = "Hello, DSA!";
+    DSA *dsaKeyPair = NULL;
+
+    generateDsaKeyPair(&dsaKeyPair);
+    signMessage(message, dsaKeyPair);
+
+    int verificationResult = verifySignature(message, dsaKeyPair);
+    if (verificationResult) {
+        printf("Signature verified successfully.\n");
+    } else {
+        printf("Signature verification failed.\n");
+    }
+
+    DSA_free(dsaKeyPair);
+
+    return 0;
+}
