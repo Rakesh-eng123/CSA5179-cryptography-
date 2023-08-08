@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <string.h>
+#include <openssl/des.h>
+
+void encryptECB(const unsigned char *input, unsigned char *output, size_t length, const unsigned char *key) {
+    DES_cblock desKey;
+    DES_key_schedule ks;
+
+    memcpy(desKey, key, 8);
+    DES_set_key(&desKey, &ks);
+
+    for (size_t i = 0; i < length; i += 8) {
+        unsigned char block[8];
+        memcpy(block, input + i, 8);
+
+        DES_ecb_encrypt((DES_cblock *)block, (DES_cblock *)output + i, &ks, DES_ENCRYPT);
+    }
+}
+
+void decryptECB(const unsigned char *input, unsigned char *output, size_t length, const unsigned char *key) {
+    DES_cblock desKey;
+    DES_key_schedule ks;
+
+    memcpy(desKey, key, 8);
+    DES_set_key(&desKey, &ks);
+
+    for (size_t i = 0; i < length; i += 8) {
+        unsigned char block[8];
+        memcpy(block, input + i, 8);
+
+        DES_ecb_encrypt((DES_cblock *)block, (DES_cblock *)output + i, &ks, DES_DECRYPT);
+    }
+}
+
+int main() {
+    unsigned char key[8] = "12345678";
+
+    const char *plaintext = "Hello ECB Mode!";
+    size_t plaintextLength = strlen(plaintext);
+
+    size_t ciphertextLength = (plaintextLength / 8 + 1) * 8;
+    unsigned char *ciphertext = malloc(ciphertextLength);
+    
+    unsigned char *decryptedText = malloc(ciphertextLength);
+
+    encryptECB((const unsigned char *)plaintext, ciphertext, plaintextLength, key);
+
+    printf("Plaintext: %s\n", plaintext);
+    printf("Ciphertext: ");
+    for (size_t i = 0; i < ciphertextLength; i++) {
+        printf("%02X", ciphertext[i]);
+    }
+    printf("\n");
+
+    decryptECB(ciphertext, decryptedText, ciphertextLength, key);
+    decryptedText[ciphertextLength - 1] = '\0';
+    printf("Decrypted: %s\n", decryptedText);
+
+    free(ciphertext);
+    free(decryptedText);
+
+    return 0;
+}
