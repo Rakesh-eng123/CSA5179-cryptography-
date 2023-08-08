@@ -1,0 +1,36 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define ALPHABET_SIZE 26
+
+void decryptAdditiveCipher(char ciphertext[], int key) {
+    int length = strlen(ciphertext);
+
+    printf("Key: %d\n", key);
+    printf("Decrypted Text:\n");
+
+    for (int i = 0; i < length; i++) {
+        if (isalpha(ciphertext[i])) {
+            char decryptedChar = ((ciphertext[i] - 'A' - key + ALPHABET_SIZE) % ALPHABET_SIZE) + 'A';
+            printf("%c", decryptedChar);
+        } else {
+            printf("%c", ciphertext[i]);
+        }
+    }
+    printf("\n\n");
+}
+
+int main() {
+    char ciphertext[] = "HTPMA";
+    int topN = 10; // Number of top possible plaintexts to display
+
+    printf("Ciphertext: %s\n", ciphertext);
+
+    printf("Possible Plaintexts:\n");
+    for (int key = 0; key < ALPHABET_SIZE; key++) {
+        decryptAdditiveCipher(ciphertext, key);
+    }
+
+    return 0;
+}
