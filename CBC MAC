@@ -1,0 +1,46 @@
+#include <stdio.h>
+#include <string.h>
+#include <openssl/evp.h>
+
+void cbc_mac(const unsigned char *key, const unsigned char *message, size_t length, unsigned char *mac) {
+    EVP_CIPHER_CTX *ctx;
+    const EVP_CIPHER *cipher = EVP_aes_128_cbc(); // Use AES-128 CBC for example
+
+    unsigned char iv[EVP_MAX_IV_LENGTH] = {0}; // Initialization vector
+    int outlen;
+
+    ctx = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit_ex(ctx, cipher, NULL, key, iv);
+    EVP_EncryptUpdate(ctx, mac, &outlen, message, length);
+    EVP_EncryptFinal_ex(ctx, mac + outlen, &outlen);
+    EVP_CIPHER_CTX_free(ctx);
+}
+
+int main() {
+    const unsigned char key[] = "0123456789abcdef"; // 128-bit key
+    const unsigned char message[] = "Hello, CBC MAC!";
+    size_t messageLength = strlen((const char *)message);
+
+    unsigned char mac[EVP_MAX_BLOCK_LENGTH]; // Maximum block length for AES
+
+    cbc_mac(key, message, messageLength, mac);
+    printf("CBC MAC for one-block message: ");
+    for (size_t i = 0; i < EVP_CIPHER_block_size(EVP_aes_128_cbc()); i++) {
+        printf("%02x", mac[i]);
+    }
+    printf("\n");
+
+    unsigned char concatenatedMessage[messageLength * 2];
+    memcpy(concatenatedMessage, message, messageLength);
+    for (size_t i = 0; i < messageLength; i++) {
+        concatenatedMessage[messageLength + i] = message[i] ^ mac[i];
+    }
+    cbc_mac(key, concatenatedMessage, messageLength * 2, mac);
+    printf("CBC MAC for two-block message: ");
+    for (size_t i = 0; i < EVP_CIPHER_block_size(EVP_aes_128_cbc()); i++) {
+        printf("%02x", mac[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
