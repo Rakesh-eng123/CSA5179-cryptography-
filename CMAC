@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+
+#define BLOCK_SIZE 16 // Change this to 8 for a 64-bit block size
+
+void generateSubkeys(const uint8_t *cipherKey, uint8_t *subkey1, uint8_t *subkey2) {
+    uint8_t zeroBlock[BLOCK_SIZE] = {0};
+    uint8_t L[BLOCK_SIZE] = {0};
+    uint8_t R[BLOCK_SIZE] = {0};
+    memcpy(L, zeroBlock, BLOCK_SIZE);
+
+    uint8_t carry = 0;
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        uint8_t newCarry = (L[i] & 0x80) >> 7;
+        L[i] = (L[i] << 1) | carry;
+        carry = newCarry;
+    }
+
+    if ((L[0] & 0x80) == 0x80) {
+        const uint8_t Rb = 0x87; // Constant for a 128-bit block size
+        // For a 64-bit block size, use Rb = 0x1B
+        for (int i = 0; i < BLOCK_SIZE; i++) {
+            L[i] ^= Rb;
+        }
+    }
+
+    // Compute the second subkey using the same process
+    memcpy(R, L, BLOCK_SIZE);
+    carry = (L[0] & 0x80) >> 7;
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        uint8_t newCarry = (R[i] & 0x80) >> 7;
+        R[i] = (R[i] << 1) | carry;
+        carry = newCarry;
+    }
+    if ((R[0] & 0x80) == 0x80) {
+        const uint8_t Rb = 0x87; // Constant for a 128-bit block size
+     
+        for (int i = 0; i < BLOCK_SIZE; i++) {
+            R[i] ^= Rb;
+        }
+    }
+
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        subkey1[i] = L[i] ^ cipherKey[i];
+        subkey2[i] = R[i] ^ subkey1[i];
+    }
+}
+
+int main() {
+    uint8_t cipherKey[BLOCK_SIZE] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x97, 0x46, 0xa3, 0x5c, 0x81, 0x14};
+    uint8_t subkey1[BLOCK_SIZE];
+    uint8_t subkey2[BLOCK_SIZE];
+
+    generateSubkeys(cipherKey, subkey1, subkey2);
+
+    printf("Subkey 1: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        printf("%02x ", subkey1[i]);
+    }
+    printf("\n");
+
+    printf("Subkey 2: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        printf("%02x ", subkey2[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
